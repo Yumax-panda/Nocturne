@@ -9,3 +9,12 @@ export type Env = Partial<{
 export type EmptyEnv = {};
 
 export type Next = () => Promise<void>;
+
+export type SupportedMethod =
+	| "GET"
+	| "POST"
+	| "PUT"
+	| "PATCH"
+	| "DELETE"
+	| "OPTIONS"
+	| "HEAD";
