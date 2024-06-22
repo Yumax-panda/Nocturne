@@ -4,7 +4,12 @@
 	"description": "A minimal web framework written in TypeScript",
 	"main": "index.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"start": "npm run build:live",
+		"build": "tsc -p .",
+		"build:live": "nodemon --watch 'src/**/*.ts' --exec \"ts-node\" src/index.ts",
+		"lint": "biome lint .",
+		"format": "biome format --write .",
+		"test": "vitest"
 	},
 	"keywords": [],
 	"author": "Yumax-panda",
@@ -15,6 +20,7 @@
 		"lefthook": "^1.6.18",
 		"nodemon": "^3.1.4",
 		"ts-node": "^10.9.2",
-		"typescript": "^5.5.2"
+		"typescript": "^5.5.2",
+		"vitest": "^1.6.0"
 	}
 }
