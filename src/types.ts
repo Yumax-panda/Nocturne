@@ -16,5 +16,4 @@ export type SupportedMethod =
 	| "PUT"
 	| "PATCH"
 	| "DELETE"
-	| "OPTIONS"
-	| "HEAD";
+	| "OPTIONS";
