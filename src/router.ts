@@ -1,39 +1,39 @@
-import type { Env, Handler, Middleware, SupportedMethod } from "./types";
+import type { INocturne as Nocturne } from "./nocturne";
+import type { Route } from "./types";
+import type { Env, Handler } from "./types";
 
-export interface GroupMixin<E extends Env> {
-	middleware: Middleware<E>[];
-	router: Router<E>;
-	get: Callback<E>;
-	post: Callback<E>;
-	put: Callback<E>;
-	patch: Callback<E>;
-	delete: Callback<E>;
-	options: Callback<E>;
-	trace: Callback<E>;
-	head: Callback<E>;
-	group: (path: string) => Group<E>;
-	match: (
-		methods: SupportedMethod[],
-		...args: Parameters<Callback<E>>
-	) => Route[];
-	add: (method: SupportedMethod, path: string, handler: Handler<E>) => Route;
-}
-
-type Callback<E extends Env> = (
-	path: string,
-	handler: Handler<E>,
-	...middlewares: Middleware<E>[]
-) => Route;
-
-export interface Router<E extends Env> extends GroupMixin<E> {}
-
-export interface Group<E extends Env> extends GroupMixin<E> {
-	host: string;
-	prefix: string;
-}
-
-export type Route = {
-	method: SupportedMethod;
-	path: string;
-	name: string;
+export type Router<E extends Env> = {
+	tree: Node<E>;
+	routes: Record<string, Route>;
+	srv: Nocturne<E>;
 };
+
+type Node<E extends Env> = {
+	methods: RouteMethods<E>;
+	parent: Node<E> | null;
+	paramChild: Node<E> | null;
+	anyChild: Node<E> | null;
+	notFound: RouteMethods<E> | null;
+	prefix: string;
+	originalPath: string;
+	isLeaf: boolean;
+};
+
+interface RouteMethod<E extends Env> {
+	handler: Handler<E>;
+	path: string;
+	names: string[];
+}
+
+interface RouteMethods<E extends Env> {
+	connect: RouteMethod<E>;
+	delete: RouteMethod<E>;
+	get: RouteMethod<E>;
+	head: RouteMethod<E>;
+	options: RouteMethod<E>;
+	patch: RouteMethod<E>;
+	post: RouteMethod<E>;
+	put: RouteMethod<E>;
+	trace: RouteMethod<E>;
+	allowHeader: string;
+}

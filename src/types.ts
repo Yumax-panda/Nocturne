@@ -23,3 +23,9 @@ export type SupportedMethod =
 export type Middleware<E extends Env> = (next: Handler<E>) => Promise<void>;
 
 export type Handler<E extends Env> = (c: Context<E>) => Promise<void>;
+
+export type Route = {
+	method: SupportedMethod;
+	path: string;
+	name: string;
+};

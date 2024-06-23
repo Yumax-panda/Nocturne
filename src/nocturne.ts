@@ -1,11 +1,9 @@
-import type { EmptyEnv, Env } from "./types";
+import type { Router } from "./router";
+import type { EmptyEnv, Env, Middleware } from "./types";
 
-export class Nocturne<
-	ServerEnv extends Env = EmptyEnv,
-	BasePath extends string = "/",
-> {
-	constructor(
-		public env: ServerEnv,
-		public basePath: BasePath,
-	) {}
+export interface INocturne<E extends Env = EmptyEnv> {
+	env: E;
+	router: Router<E>;
+	routers: Record<string, Router<E>>;
+	middlewares: Middleware<E>[];
 }
