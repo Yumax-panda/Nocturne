@@ -1,3 +1,5 @@
+import type { Context } from "./context";
+
 export type Bindings = Record<string, unknown>;
 export type Variables = Record<string, unknown>;
 
@@ -8,12 +10,16 @@ export type Env = Partial<{
 
 export type EmptyEnv = {};
 
-export type Next = () => Promise<void>;
-
 export type SupportedMethod =
 	| "GET"
 	| "POST"
 	| "PUT"
 	| "PATCH"
 	| "DELETE"
-	| "OPTIONS";
+	| "OPTIONS"
+	| "TRACE"
+	| "HEAD";
+
+export type Middleware<E extends Env> = (next: Handler<E>) => Promise<void>;
+
+export type Handler<E extends Env> = (c: Context<E>) => Promise<void>;

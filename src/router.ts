@@ -1,58 +1,39 @@
-import type { SupportedMethod } from "./types";
+import type { Env, Handler, Middleware, SupportedMethod } from "./types";
 
-export interface Router<T> {
-	routes: Routes<T>;
-	add(method: SupportedMethod, path: Path, handler: T): void;
-	match(method: SupportedMethod, path: Path): Result<T>;
+export interface GroupMixin<E extends Env> {
+	middleware: Middleware<E>[];
+	router: Router<E>;
+	get: Callback<E>;
+	post: Callback<E>;
+	put: Callback<E>;
+	patch: Callback<E>;
+	delete: Callback<E>;
+	options: Callback<E>;
+	trace: Callback<E>;
+	head: Callback<E>;
+	group: (path: string) => Group<E>;
+	match: (
+		methods: SupportedMethod[],
+		...args: Parameters<Callback<E>>
+	) => Route[];
+	add: (method: SupportedMethod, path: string, handler: Handler<E>) => Route;
 }
-/**
- * [method, path, handler]
- */
-export type Routes<T> = [SupportedMethod, string, T][];
-export type ParamIndexMap = Record<string, number>;
-export type Params = Record<string, string>;
-export type ParamStash = string[];
 
-/**
- * [[handler, paramIndexMap][], paramArray]
- * ```typescript
- * [
- *   [
- *     [middlewareA, {}],                     // '*'
- *     [funcA,       {'id': 0}],              // '/user/:id/*'
- *     [funcB,       {'id': 0, 'action': 1}], // '/user/:id/:action'
- *   ],
- *   ['123', 'abc']
- * ]
- * ```
- *
- * [[handler, params][]]
- * ```typescript
- * [
- *   [
- *     [middlewareA, {}],                             // '*'
- *     [funcA,       {'id': '123'}],                  // '/user/:id/*'
- *     [funcB,       {'id': '123', 'action': 'abc'}], // '/user/:id/:action'
- *   ]
- * ]
- * ```
- */
-export type Result<T> = [[T, ParamIndexMap][], ParamStash] | [[T, Params][]];
+type Callback<E extends Env> = (
+	path: string,
+	handler: Handler<E>,
+	...middlewares: Middleware<E>[]
+) => Route;
 
-export type PathParameter = {
+export interface Router<E extends Env> extends GroupMixin<E> {}
+
+export interface Group<E extends Env> extends GroupMixin<E> {
+	host: string;
+	prefix: string;
+}
+
+export type Route = {
+	method: SupportedMethod;
+	path: string;
 	name: string;
-	type: "string" | "number";
-	required: boolean;
-};
-
-export type QueryParameter = {
-	[key: string]: {
-		type: "string" | "number";
-		required: boolean;
-	};
-};
-
-export type Path = {
-	segments: (string | PathParameter)[];
-	query: QueryParameter;
 };
