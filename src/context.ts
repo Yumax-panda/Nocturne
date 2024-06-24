@@ -1,9 +1,12 @@
-import type { Env, Handler } from "./types";
+import type { Nocturne } from "./nocturne";
+import type { Env } from "./types";
 
 export interface Context<E extends Env> {
 	env: E["Bindings"];
 	request: Request;
+	setRequest(request: Request): void;
 	response: Response;
+	setResponse(response: Response): void;
 	isTLS: boolean;
 	isWebSocket: boolean;
 	scheme: "http" | "https";
@@ -11,20 +14,5 @@ export interface Context<E extends Env> {
 	path: string;
 	setPath(path: string): void;
 	params: Record<string, string>;
-	query: URLSearchParams;
-	formValues: URLSearchParams;
-	formFile(name: string): Promise<File | null>;
-	cookies: Record<string, string>;
-	string(code: number, text: string): void;
-	json(code: number, data: JsonSerializable): void;
-	redirect(code: number, url: string): void;
-	handler: Handler<E>;
+	nocturne(): Nocturne<E>;
 }
-
-type JsonSerializable =
-	| string
-	| number
-	| boolean
-	| null
-	| JsonSerializable[]
-	| { [key: string]: JsonSerializable };
