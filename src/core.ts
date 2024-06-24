@@ -1,4 +1,4 @@
-import type { Router } from "./router";
+import type { IRouter as Router } from "./router";
 import type { Env, Handler, Middleware, SupportedMethod } from "./types";
 
 export interface GroupMixin<E extends Env> {
