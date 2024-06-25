@@ -1,4 +1,5 @@
-import type { IRouter as Router } from "./router";
+import type { Route } from "./nocturne";
+import type { Router } from "./router";
 import type { Env, Handler, Middleware, SupportedMethod } from "./types";
 
 export interface GroupMixin<E extends Env> {
@@ -30,9 +31,3 @@ export interface Group<E extends Env> extends GroupMixin<E> {
 	host: string;
 	prefix: string;
 }
-
-export type Route = {
-	method: SupportedMethod;
-	path: string;
-	name: string;
-};

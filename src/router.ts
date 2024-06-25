@@ -1,7 +1,6 @@
-import type { INocturne as Nocturne } from "./nocturne";
-import { RouteNotFound } from "./nocturne";
-import type { Route } from "./types";
-import type { Env, Handler } from "./types";
+import type { Nocturne } from "./nocturne";
+import { type Route, RouteNotFound } from "./nocturne";
+import type { Env, Handler, SupportedMethod } from "./types";
 
 enum AllowHeader {
 	CONNECT = "CONNECT",
@@ -20,189 +19,24 @@ enum AllowHeader {
 const PARAM_LABEL = ":";
 const ANY_LABEL = "*";
 
-export type IRouter<E extends Env> = {
-	tree: INode<E>;
-	routes: Record<string, Route>;
-	n: Nocturne<E>;
-};
-
-type INode<E extends Env> = {
-	methods: RouteMethods<E>;
-	parent?: INode<E>;
-	paramChild?: INode<E>;
-	anyChild?: INode<E>;
-	notFound?: IRouteMethod<E>;
-	prefix?: string;
-	originalPath: string;
-	staticChildren: Children<E>;
-	paramsCount: number;
-	label: string;
-	kind: number;
-	isLeaf: boolean;
-	isHandler: boolean;
-};
-
-type Children<E extends Env> = INode<E>[];
-
-interface IRouteMethod<E extends Env> {
-	handler: Handler<E>;
-	path: string;
-	names: string[];
-}
-
-interface IRouteMethods<E extends Env> {
-	connect?: IRouteMethod<E>;
-	delete?: IRouteMethod<E>;
-	get?: IRouteMethod<E>;
-	head?: IRouteMethod<E>;
-	options?: IRouteMethod<E>;
-	patch?: IRouteMethod<E>;
-	post?: IRouteMethod<E>;
-	propfind?: IRouteMethod<E>;
-	put?: IRouteMethod<E>;
-	trace?: IRouteMethod<E>;
-	report?: IRouteMethod<E>;
-	anyOther: Record<string, IRouteMethod<E>>;
-	allowHeader: string;
-}
-
-export class Node<E extends Env> implements INode<E> {
-	methods: RouteMethods<E>;
-	parent?: INode<E>;
-	paramChild?: INode<E>;
-	anyChild?: INode<E>;
-	notFound?: IRouteMethod<E>;
-	prefix?: string;
-	originalPath: string;
-	staticChildren: Children<E>;
-	paramsCount: number;
-	label: string;
-	kind: number;
-	isLeaf: boolean;
-	isHandler: boolean;
-
-	constructor(
-		t: number,
-		pre: string,
-		p: INode<E> | undefined,
-		sc: Children<E>,
-		originalPath: string,
-		methods: RouteMethods<E>,
-		paramsCount: number,
-		paramChildren: INode<E> | undefined,
-		anyChildren: INode<E> | undefined,
-		notFound: IRouteMethod<E> | undefined,
-	) {
-		this.kind = t;
-		this.label = pre[0];
-		this.prefix = pre;
-		this.parent = p;
-		this.staticChildren = sc;
-		this.originalPath = originalPath;
-		this.methods = methods;
-		this.paramsCount = paramsCount;
-		this.paramChild = paramChildren;
-		this.anyChild = anyChildren;
-		this.isLeaf = sc.length === 0 && !paramChildren && !anyChildren;
-		this.isHandler = methods?.isHandler();
-		this.notFound = notFound;
-	}
-
-	addStaticChild(c: INode<E>): void {
-		this.staticChildren.push(c);
-	}
-
-	findStaticChild(label: string): INode<E> | undefined {
-		for (const child of this.staticChildren) {
-			if (child.label === label) {
-				return child;
-			}
-		}
-
-		return undefined;
-	}
-
-	findChildWithLabel(label: string): INode<E> | undefined {
-		const c = this.findStaticChild(label);
-
-		if (c) return c;
-
-		if (label === PARAM_LABEL) {
-			return this.paramChild;
-		}
-
-		if (label === ANY_LABEL) {
-			return this.anyChild;
-		}
-
-		return undefined;
-	}
-
-	addMethod(method: string, h?: IRouteMethod<E>): void {
-		switch (method) {
-			case AllowHeader.CONNECT:
-				this.methods.connect = h;
-				break;
-			case "DELETE":
-				this.methods.delete = h;
-				break;
-			case AllowHeader.GET:
-				this.methods.get = h;
-				break;
-			case AllowHeader.HEAD:
-				this.methods.head = h;
-				break;
-			case AllowHeader.OPTIONS:
-				this.methods.options = h;
-				break;
-			case AllowHeader.PATCH:
-				this.methods.patch = h;
-				break;
-			case AllowHeader.POST:
-				this.methods.post = h;
-				break;
-			case AllowHeader.PROPFIND:
-				this.methods.propfind = h;
-				break;
-			case AllowHeader.PUT:
-				this.methods.put = h;
-				break;
-			case AllowHeader.TRACE:
-				this.methods.trace = h;
-				break;
-			case AllowHeader.REPORT:
-				this.methods.report = h;
-				break;
-			case RouteNotFound:
-				this.notFound = h;
-				break;
-			default:
-				if (!h) {
-					delete this.methods.anyOther[method];
-					return;
-				}
-
-				this.methods.anyOther[method] = h;
-		}
-	}
-}
-
-export class RouteMethods<E extends Env> implements IRouteMethods<E> {
-	connect?: IRouteMethod<E>;
-	delete?: IRouteMethod<E>;
-	get?: IRouteMethod<E>;
-	head?: IRouteMethod<E>;
-	options?: IRouteMethod<E>;
-	patch?: IRouteMethod<E>;
-	post?: IRouteMethod<E>;
-	propfind?: IRouteMethod<E>;
-	put?: IRouteMethod<E>;
-	trace?: IRouteMethod<E>;
-	report?: IRouteMethod<E>;
-	anyOther: Record<string, IRouteMethod<E>>;
+export class RouteMethods<E extends Env> {
+	connect?: RouteMethod<E>;
+	delete?: RouteMethod<E>;
+	get?: RouteMethod<E>;
+	head?: RouteMethod<E>;
+	options?: RouteMethod<E>;
+	patch?: RouteMethod<E>;
+	post?: RouteMethod<E>;
+	propfind?: RouteMethod<E>;
+	put?: RouteMethod<E>;
+	trace?: RouteMethod<E>;
+	report?: RouteMethod<E>;
+	anyOther: Record<string, RouteMethod<E>>;
 	allowHeader: string;
 
-	constructor(anyOther: Record<string, IRouteMethod<E>> = {}) {
+	constructor({
+		anyOther = {},
+	}: { anyOther?: Record<string, RouteMethod<E>> }) {
 		this.anyOther = anyOther;
 		this.allowHeader = "";
 	}
@@ -274,3 +108,211 @@ export class RouteMethods<E extends Env> implements IRouteMethods<E> {
 		this.allowHeader = allowHeaders.join(", ");
 	}
 }
+
+export class Router<E extends Env> {
+	tree: Node<E>;
+	private _routes: Record<string, Route>;
+	n: Nocturne<E>;
+
+	constructor({ n }: { n: Nocturne<E> }) {
+		this.n = n;
+		this.tree = new Node<E>({ methods: new RouteMethods<E>({}) });
+		this._routes = {};
+	}
+
+	routes(): Route[] {
+		return Object.values(this._routes);
+	}
+}
+
+type Children<E extends Env> = Node<E>[];
+
+export class RouteMethod<E extends Env> {
+	handler: Handler<E>;
+	path: string;
+	names: string[];
+
+	constructor({
+		handler,
+		path = "",
+		names = [],
+	}: {
+		handler: Handler<E>;
+		path?: string;
+		names?: string[];
+	}) {
+		this.handler = handler;
+		this.path = path;
+		this.names = names;
+	}
+}
+
+export class Node<E extends Env> {
+	methods: RouteMethods<E>;
+	parent?: Node<E>;
+	paramChild?: Node<E>;
+	anyChild?: Node<E>;
+	notFound?: RouteMethod<E>;
+	prefix?: string;
+	originalPath: string;
+	staticChildren: Children<E>;
+	paramsCount: number;
+	label: string;
+	kind: number;
+	isLeaf: boolean;
+	isHandler: boolean;
+
+	constructor({
+		t = 0,
+		pre = "",
+		p = undefined,
+		sc = [],
+		originalPath = "",
+		methods,
+		paramsCount = 0,
+		paramChildren = undefined,
+		anyChildren = undefined,
+		notFound = undefined,
+	}: {
+		t?: number;
+		pre?: string;
+		p?: Node<E> | undefined;
+		sc?: Children<E>;
+		originalPath?: string;
+		methods: RouteMethods<E>;
+		paramsCount?: number;
+		paramChildren?: Node<E> | undefined;
+		anyChildren?: Node<E> | undefined;
+		notFound?: RouteMethod<E> | undefined;
+	}) {
+		this.kind = t;
+		this.label = pre[0];
+		this.prefix = pre;
+		this.parent = p;
+		this.staticChildren = sc;
+		this.originalPath = originalPath;
+		this.methods = methods;
+		this.paramsCount = paramsCount;
+		this.paramChild = paramChildren;
+		this.anyChild = anyChildren;
+		this.isLeaf = sc.length === 0 && !paramChildren && !anyChildren;
+		this.isHandler = methods.isHandler();
+		this.notFound = notFound;
+	}
+
+	addStaticChild(c: Node<E>): void {
+		this.staticChildren.push(c);
+	}
+
+	findStaticChild(label: string): Node<E> | undefined {
+		for (const child of this.staticChildren) {
+			if (child.label === label) {
+				return child;
+			}
+		}
+
+		return undefined;
+	}
+
+	findChildWithLabel(label: string): Node<E> | undefined {
+		const c = this.findStaticChild(label);
+
+		if (c) return c;
+
+		if (label === PARAM_LABEL) {
+			return this.paramChild;
+		}
+
+		if (label === ANY_LABEL) {
+			return this.anyChild;
+		}
+
+		return undefined;
+	}
+
+	addMethod(method: string, h?: RouteMethod<E>): void {
+		switch (method) {
+			case AllowHeader.CONNECT:
+				this.methods.connect = h;
+				break;
+			case "DELETE":
+				this.methods.delete = h;
+				break;
+			case AllowHeader.GET:
+				this.methods.get = h;
+				break;
+			case AllowHeader.HEAD:
+				this.methods.head = h;
+				break;
+			case AllowHeader.OPTIONS:
+				this.methods.options = h;
+				break;
+			case AllowHeader.PATCH:
+				this.methods.patch = h;
+				break;
+			case AllowHeader.POST:
+				this.methods.post = h;
+				break;
+			case AllowHeader.PROPFIND:
+				this.methods.propfind = h;
+				break;
+			case AllowHeader.PUT:
+				this.methods.put = h;
+				break;
+			case AllowHeader.TRACE:
+				this.methods.trace = h;
+				break;
+			case AllowHeader.REPORT:
+				this.methods.report = h;
+				break;
+			case RouteNotFound:
+				this.notFound = h;
+				break;
+			default:
+				if (!h) {
+					delete this.methods.anyOther[method];
+					return;
+				}
+
+				this.methods.anyOther[method] = h;
+		}
+
+		this.methods.updateAllowHeader();
+		this.isHandler = true;
+	}
+
+	findMethod(method: SupportedMethod): RouteMethod<E> | undefined {
+		switch (method) {
+			case AllowHeader.CONNECT:
+				return this.methods.connect;
+			case "DELETE":
+				return this.methods.delete;
+			case AllowHeader.GET:
+				return this.methods.get;
+			case AllowHeader.HEAD:
+				return this.methods.head;
+			case AllowHeader.OPTIONS:
+				return this.methods.options;
+			case AllowHeader.PATCH:
+				return this.methods.patch;
+			case AllowHeader.POST:
+				return this.methods.post;
+			case AllowHeader.PROPFIND:
+				return this.methods.propfind;
+			case AllowHeader.PUT:
+				return this.methods.put;
+			case AllowHeader.TRACE:
+				return this.methods.trace;
+			case AllowHeader.REPORT:
+				return this.methods.report;
+			default:
+				return this.methods.anyOther[method];
+		}
+	}
+}
+
+const normalizePathSlash = (path: string): string => {
+	if (!path.startsWith("/")) return `/${path}`;
+
+	return path;
+};
