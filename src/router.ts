@@ -120,8 +120,43 @@ export class Router<E extends Env> {
 		this._routes = {};
 	}
 
-	routes(): Route[] {
+	get routes(): Route[] {
 		return Object.values(this._routes);
+	}
+
+	/**
+	 * ルートの名前に基づいてURIを生成する.
+	 * 例えば, ルートが`/users/:id`である場合, `reverse("users", 1)`は`/users/1`を返す.
+	 * @param name ルートの名前
+	 * @param params 文字列に変換可能なパラメータ
+	 * @returns 生成したURI
+	 */
+	reverse(name: string, ...params: { toString: () => string }[]): string {
+		const route = this._routes[name];
+
+		if (!route) {
+			return "";
+		}
+
+		let path = "";
+		const segments = route.path.split("/");
+		const currentIdx = 0;
+		const paramsCount = params.length;
+
+		for (const segment of segments) {
+			if (segment[0] === ANY_LABEL) return path;
+
+			if (segment[0] === PARAM_LABEL) {
+				if (currentIdx < paramsCount) {
+					path += `/${params[currentIdx].toString()}`;
+				}
+				continue;
+			}
+
+			path += `/${segment}`;
+		}
+
+		return path;
 	}
 }
 
